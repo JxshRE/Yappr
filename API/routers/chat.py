@@ -8,8 +8,11 @@ from pydantic import UUID4, BaseModel
 from sqlmodel import Session
 from starlette.websockets import WebSocket, WebSocketDisconnect
 from sqlmodel import select, Session
+
+from database.chat_repo import get_user_channel, get_message_history, get_user_channels_from_db, ChannelReduced, \
+    MessageWeb, add_msg_to_history
 from database.database import User, get_session, Message, UserChannel, Channel
-from routers.auth import get_current_user, get_user_channel, get_current_user_websocket
+from routers.auth import get_current_user, get_current_user_websocket
 
 router = APIRouter(
     prefix="/chat",
@@ -17,43 +20,6 @@ router = APIRouter(
 )
 
 connected_clients: Dict[str, list[WebSocket]] = {}
-
-class ChannelReduced(BaseModel):
-    name: str
-    guid: uuid.UUID
-
-class MessageWeb(BaseModel):
-    content: str
-    sender_name: str
-    sender_guid: uuid.UUID
-
-async def add_msg_to_history(content: str, channel_id: int, user: User, session: Session):
-    message = Message(content=content, sender=user.id, guid=uuid.uuid4(), channel_id=channel_id)
-    session.add(message)
-    session.commit()
-
-def get_user_channels_from_db(user: User, session: Session):
-    statement = select(UserChannel, Channel).join(Channel).where(UserChannel.user_id == user.id)
-    results = session.exec(statement)
-    channels = []
-    for uChannel, channel in results:
-        channels.append(ChannelReduced(name=channel.name or '', guid=channel.guid))
-
-    return channels
-
-def get_message_history(session: Session, channel_id: uuid.UUID, user: User):
-    statement = (select(Message, Channel, UserChannel, User)
-    .join(Channel, Channel.id == Message.channel_id)
-    .join(UserChannel, UserChannel.channel_id == Channel.id)
-    .join(User, User.id == Message.sender)
-    .where((UserChannel.user_id == user.id) & (Channel.guid == channel_id)))
-
-    results = session.exec(statement)
-    messages = []
-    for msg, channel, uChannel, usr in results:
-        messages.append(MessageWeb(sender_name=usr.username, sender_guid=usr.user_guid, content=msg.content))
-
-    return messages
 
 @router.get("/channels/{channel_id}/history", response_model=List[MessageWeb])
 async def get_message_history_for_channel(channel_id: uuid.UUID, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
