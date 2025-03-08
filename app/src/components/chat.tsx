@@ -5,11 +5,11 @@ import { Message } from "../types/message"
 import { useForm } from "react-hook-form"
 import React from "react"
 
-interface props{
+interface props {
     channelId: string
 }
 
-export function Chat({ channelId }: props){
+export function Chat({ channelId }: props) {
 
     const [socketUrl, setSocketUrl] = useState(`${import.meta.env.VITE_API_BASEURL_WEBSOCKET}/chat/channel/${channelId}`)
     const [messageHistory, setMessageHistory] = useState<Message[]>([])
@@ -27,56 +27,56 @@ export function Chat({ channelId }: props){
         formState: { errors },
     } = useForm();
 
-    useEffect(()=>{
-        if (chatWindowRef.current){
+    useEffect(() => {
+        if (chatWindowRef.current) {
             chatWindowRef.current.addEventListener('scroll', handleAutoScroll);
         }
 
         GetChannelHistory(channelId).then(x => {
-            if (x.data){
+            if (x.data) {
                 setMessageHistory(x.data)
             }
         })
     }, [])
 
-    useEffect(()=>{
+    useEffect(() => {
         reset_component()
     }, [channelId])
 
-    function reset_component(){
+    function reset_component() {
         setMessageHistory([])
         setSocketUrl(`${import.meta.env.VITE_API_BASEURL_WEBSOCKET}/chat/channel/${channelId}`)
         GetChannelHistory(channelId).then(x => {
-            if (x.data){
+            if (x.data) {
                 setMessageHistory(x.data)
             }
         })
     }
 
-    useEffect(()=>{
-        if (lastMessage !== null){
+    useEffect(() => {
+        if (lastMessage !== null) {
             const initial = JSON.parse(lastMessage.data);
             const msg: Message = JSON.parse(initial);
-            setMessageHistory((prev)=>prev.concat(msg));
+            setMessageHistory((prev) => prev.concat(msg));
         }
     }, [lastMessage])
 
-    
-    function handleAutoScroll(){
+
+    function handleAutoScroll() {
         if (!chatWindowRef.current)
             return;
 
         const { scrollTop, scrollHeight, clientHeight } = chatWindowRef.current
 
-        if (scrollTop + clientHeight < scrollHeight){
+        if (scrollTop + clientHeight < scrollHeight) {
             setDisableAutoScroll(true)
-        }else{
+        } else {
             setDisableAutoScroll(false);
         }
 
     }
 
-    function sendMsg(data: any){
+    function sendMsg(data: any) {
 
         const msg = data.message;
 
@@ -87,32 +87,34 @@ export function Chat({ channelId }: props){
         reset()
     }
 
-    useEffect(()=>{
-        if (scrollToRef.current && !disableAutoScroll){
-            scrollToRef.current.scrollIntoView({behavior: 'smooth'})
+    useEffect(() => {
+        if (scrollToRef.current && !disableAutoScroll) {
+            scrollToRef.current.scrollIntoView({ behavior: 'smooth' })
         }
     }, [messageHistory])
 
 
     return (
-        <div className="w-full h-full bg-secondary p-3">
+        <div className="w-full h-full bg-secondary p-3 flex flex-col">
             <p className="mb-2">Chat ID: {channelId}</p>
-            <div ref={chatWindowRef} onScroll={handleAutoScroll} className="w-full h-[90%] flex flex-col gap-3 flex-start overflow-y-scroll">
-            {
-                messageHistory.map((x,i) => (
-                    <div key={i} className="pl-3 w-full p-2 bg-primary flex flex-col rounded-lg h-max">
-                        <p className="font-bold text-lg">{x.sender_name}</p>
-                        <p className="text-foreground">{x.content}</p>
-                    </div>
-                ))
-            }
-            <div className="mt-2" ref={scrollToRef}></div>
+            <div ref={chatWindowRef} onScroll={handleAutoScroll} className="w-full h-full flex flex-col gap-3 flex-start overflow-y-scroll">
+                {
+                    messageHistory.map((x, i) => (
+                        <div key={i} className="pl-3 w-full p-2 bg-primary flex flex-col rounded-lg h-max">
+                            <p className="font-bold text-lg">{x.sender_name}</p>
+                            <p className="text-foreground">{x.content}</p>
+                        </div>
+                    ))
+                }
+                <div className="mt-2" ref={scrollToRef}></div>
             </div>
 
             <div className="w-full h-15 bg-primary flex flex-row p-3">
                 <form className="flex flex-row w-full" onSubmit={handleSubmit(sendMsg)}>
-                    <input type="text" placeholder="Enter message" className="w-[90%] h-full bg-transparent outline-none" {...register('message')} />
-                    <button type="submit">Send Message</button>
+                    <input autoComplete="off" type="text" placeholder="Enter message" className="w-[98%] text-foreground h-full bg-transparent outline-none" {...register('message')} />
+                    <button type="submit" className="self-end justify-self-end text-foreground cursor-pointer"><span className="material-symbols-outlined">
+                        send
+                    </span></button>
                 </form>
             </div>
 
