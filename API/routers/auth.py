@@ -8,6 +8,7 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 from sqlmodel import select, Session
 from starlette import status
+from starlette.websockets import WebSocket
 from typing_extensions import Optional
 
 from database.database import User, get_session, UserChannel, Channel
@@ -30,8 +31,8 @@ class AuthResponse(BaseModel):
     access_expiry: datetime
     username: str
 
-def get_user_channel(user: User, channel_id: str, session: Session) -> Channel:
-    statement = select(UserChannel, Channel).join(Channel).where(UserChannel.user_id == user.id and str(Channel.guid) == channel_id)
+def get_user_channel(user: User, channel_id: uuid.UUID, session: Session) -> Channel:
+    statement = select(UserChannel, Channel).join(Channel, UserChannel.channel_id == Channel.id).where((UserChannel.user_id == user.id) & (Channel.guid == channel_id))
     res = session.exec(statement)
     for uChannel, channel in res:
         return channel
@@ -123,6 +124,33 @@ def set_response_tokens(response: Response, access_token: str, refresh_token: st
         secure=True,  # Set to False for local development without HTTPS
         samesite="strict"
     )
+
+async def get_current_user_websocket(websocket: WebSocket, session: Session = Depends(get_session)) -> User or None:
+
+    token = websocket.cookies.get("access_token")
+    if not token:
+        await websocket.close(code=401, reason="Unauthorized")
+        return
+
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+        if payload.get("type") != "access":
+            await websocket.close(code=401, reason="Unauthorized")
+            return
+        username: str = payload.get("sub")
+        if username is None:
+            await websocket.close(code=401, reason="Unauthorized")
+            return
+    except:
+        await websocket.close(code=401, reason="Unauthorized")
+        return
+
+    user = get_user(username, session)
+    if user is None:
+        await websocket.close(code=401, reason="Unauthorized")
+        return
+
+    return user
 
 async def get_current_user(request: Request, session: Session = Depends(get_session)) -> User:
     credentials_exception = HTTPException(
