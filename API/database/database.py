@@ -23,16 +23,17 @@ class Message(SQLModel, table=True):
     guid: UUID | None = Field(default=None)
     sender: int | None = Field(default=None, foreign_key="user.id")
     content: str
+    channel_id: int = Field(default=None, foreign_key="channel.id")
     created_at: datetime = Field(default=datetime.now(tz=timezone.utc))
     modified_at: datetime = Field(default=datetime.now(tz=timezone.utc))
-    channel_id: int = Field(default=None, foreign_key="channel.id")
 
 class Channel(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     guid: UUID | None = Field(default=None)
+    disabled: bool | None = Field(default=False, primary_key=True)
+    name: str | None
     created_at: datetime = Field(default=datetime.now(tz=timezone.utc))
     modified_at: datetime = Field(default=datetime.now(tz=timezone.utc))
-    disabled: bool | None = Field(default=False, primary_key=True)
 
 class UserChannel(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
