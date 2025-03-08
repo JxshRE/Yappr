@@ -15,6 +15,7 @@ https://github.com/user-attachments/assets/9107dcd2-410c-4277-b52c-c85e54427f1f
 
 
 ### To-Do List
+- Refactor of code
 - Ability to create channels
 - Implement the ability to add other users
   - Automatic channel creation when adding another user for direct messaging
