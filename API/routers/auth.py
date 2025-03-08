@@ -12,15 +12,13 @@ from starlette.websockets import WebSocket
 from typing_extensions import Optional
 
 from database.database import User, get_session, UserChannel, Channel
+from database.user_repo import get_user, store_ref_token, pwd_context, UserRequest, create_user, get_user_from_refresh
 from settings import settings
 
-
-class UserRequest(BaseModel):
-    username: str
-    password: str
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/refresh")
+
+acces_token_expiry_mins = 15
+ref_token_expiry_days = 7
 
 router = APIRouter(
     prefix="/auth",
@@ -31,18 +29,8 @@ class AuthResponse(BaseModel):
     access_expiry: datetime
     username: str
 
-def get_user_channel(user: User, channel_id: uuid.UUID, session: Session) -> Channel:
-    statement = select(UserChannel, Channel).join(Channel, UserChannel.channel_id == Channel.id).where((UserChannel.user_id == user.id) & (Channel.guid == channel_id))
-    res = session.exec(statement)
-    for uChannel, channel in res:
-        return channel
-
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
-
-def get_user(username: str, session: Session):
-    statement = select(User).where(User.username == username)
-    return session.exec(statement).first()
 
 def auth_user(session: Session, username: str, password: str):
     user = get_user(username, session)
@@ -60,11 +48,6 @@ def create_access_token(data: dict, expiry: Optional[datetime] = None):
     to_encode.update({"exp": expire, "type": "access"})
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm="HS256")
 
-def store_ref_token(session: Session, token: str, user: User):
-    user.refresh_token = token
-    session.add(user)
-    session.commit()
-
 def create_refresh_token(session: Session, data: dict, user: User):
     to_encode = data.copy()
     expire = datetime.now(tz=timezone.utc) + timedelta(days=7)
@@ -74,44 +57,14 @@ def create_refresh_token(session: Session, data: dict, user: User):
     store_ref_token(session, token, user)
     return token
 
-def get_user_from_refresh(session: Session, token: str):
-    statement = select(User).where(User.refresh_token == token)
-    user = session.exec(statement).first()
-
-    if not user:
-        raise HTTPException(status_code=404, detail="Not found")
-
-    try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
-        if payload.get("type") != "refresh":
-            raise HTTPException(status_code=404, detail="Not found")
-        expiry = datetime.fromtimestamp(payload.get("exp"), timezone.utc)
-
-        if expiry < datetime.now(tz=timezone.utc):
-            raise HTTPException(status_code=404, detail="Expired")
-
-    except Exception:
-        raise HTTPException(status_code=404, detail="Something went wrong")
-
-    return user
-
-def create_user(session: Session, req: UserRequest):
-    password_hash = pwd_context.hash(req.password)
-    new_user = User(username=req.username, hashed_password=password_hash, user_guid=uuid.uuid4())
-
-    session.add(new_user)
-    session.commit()
-
-    return new_user
-
 def set_response_tokens(response: Response, access_token: str, refresh_token: str):
     response.set_cookie(
         key="access_token",
         value=access_token,
         httponly=True,
-        max_age=15 * 60,
-        expires=15 * 60,
-        secure=True,  # Set to False for local development without HTTPS
+        max_age=acces_token_expiry_mins * 60,
+        expires=acces_token_expiry_mins * 60,
+        secure=True,
         samesite="strict"
     )
 
@@ -119,9 +72,9 @@ def set_response_tokens(response: Response, access_token: str, refresh_token: st
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        max_age=7 * 24 * 60 * 60,
-        expires=7 * 24 * 60 * 60,
-        secure=True,  # Set to False for local development without HTTPS
+        max_age=ref_token_expiry_days * 24 * 60 * 60,
+        expires=ref_token_expiry_days * 24 * 60 * 60,
+        secure=True,
         samesite="strict"
     )
 
