@@ -38,21 +38,21 @@ export function Login({ isRegister = false }) {
     }
 
     return (
-        <div className="m-auto items-center w-[30rem] h-[20rem] rounded-md bg-secondary">
+        <div className="m-auto items-center w-[30rem] h-[25rem] rounded-md bg-secondary">
             <div className="w-[100%]">
-                <h1 className="m-auto text-[40px] text-center mt-5 select-none">Support Hub</h1>
+                <img className="p-3" src="src\assets\yappr_long_logo.png" />
                 <form className="p-5 flex flex-col gap-5" onSubmit={handleSubmit(submitLogin)}>
                     <div className="w-[100%] h-[3rem] bg-primary flex items-center rounded-md">
                         <span className="material-symbols-outlined absolute pl-2 select-none text-foreground">
                             person
                         </span>
-                        <input placeholder="Username/Email" className="w-[100%] h-[3rem] pl-10 text-foreground outline-none" {...register('username')} />
+                        <input autoComplete="off" placeholder="Username/Email" className="w-[100%] h-[3rem] pl-10 text-foreground outline-none" {...register('username')} />
                     </div>
                     <div className="w-[100%] h-[3rem] bg-primary flex items-center rounded-md">
                         <span className="material-symbols-outlined absolute pl-2 select-none text-foreground">
                             lock
                         </span>
-                        <input placeholder="Password" type="password" className="w-[100%] h-[3rem] pl-10 text-foreground outline-none" {...register('password')} />
+                        <input autoComplete="off" placeholder="Password" type="password" className="w-[100%] h-[3rem] pl-10 text-foreground outline-none" {...register('password')} />
                     </div>
                     <div className="flex flex-row gap-2">
                         <button type="submit" className="w-[50%] hover:bg-primary-accent cursor-pointer transition duration-50 rounded-md h-[3rem] bg-primary text-foreground">Login</button>
