@@ -3,9 +3,7 @@
 
 A simple chat application built with python & react so you can finally talk to yourself.
 
-Fr though, this is kinda just a portfolio coding project to showcase some of my python + front end skills.
-
-And yes, that right there is a logo made for a project that doesn't even need one...
+This is just a portfolio coding project that's still in progress.
 
 ### Demo Screenshots
 This is still a work in progress, more will be added.
