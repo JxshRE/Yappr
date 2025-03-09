@@ -12,7 +12,8 @@ from starlette.websockets import WebSocket
 from typing_extensions import Optional
 
 from database.database import User, get_session, UserChannel, Channel
-from database.user_repo import get_user, store_ref_token, pwd_context, UserRequest, create_user, get_user_from_refresh
+from database.user_repo import get_user, store_ref_token, pwd_context, UserRequest, create_user, get_user_from_refresh, \
+    UserReduced
 from settings import settings
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/refresh")
@@ -131,6 +132,10 @@ async def get_current_user(request: Request, session: Session = Depends(get_sess
         raise credentials_exception
 
     return user
+
+@router.get("/me")
+async def me(user: User = Depends(get_current_user)):
+    return UserReduced(username = user.username, guid=user.user_guid )
 
 
 @router.post("/register")

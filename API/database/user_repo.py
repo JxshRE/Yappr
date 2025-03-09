@@ -1,4 +1,5 @@
-﻿from datetime import timezone, datetime
+﻿import uuid
+from datetime import timezone, datetime
 
 import jwt
 from fastapi import HTTPException
@@ -10,6 +11,10 @@ from database.database import User
 from settings import settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+class UserReduced(BaseModel):
+    username: str
+    guid: uuid.UUID
 
 class UserRequest(BaseModel):
     username: str
