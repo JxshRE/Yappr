@@ -11,6 +11,8 @@ This is still a work in progress, more will be added.
 
 https://github.com/user-attachments/assets/9107dcd2-410c-4277-b52c-c85e54427f1f
 
+#### With channel member list
+![yappr_new_screenshot](https://github.com/user-attachments/assets/b9989511-dd35-40d0-ac3e-322376ee7121)
 
 ### To-Do List
 - Refactor of code

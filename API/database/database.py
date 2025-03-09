@@ -1,4 +1,5 @@
-﻿from uuid import UUID
+﻿from typing import Optional
+from uuid import UUID
 from datetime import datetime, timezone
 
 from fastapi import Depends
@@ -24,8 +25,8 @@ class Message(SQLModel, table=True):
     sender: int | None = Field(default=None, foreign_key="user.id")
     content: str
     channel_id: int = Field(default=None, foreign_key="channel.id")
-    created_at: datetime = Field(default=datetime.now(tz=timezone.utc))
-    modified_at: datetime = Field(default=datetime.now(tz=timezone.utc))
+    created_at: Optional[datetime] = Field(default=None)
+    modified_at : Optional[datetime] = Field(default=None)
 
 class Channel(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
