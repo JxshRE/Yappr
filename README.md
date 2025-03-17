@@ -7,7 +7,7 @@ This is just a portfolio coding project that's still in progress.
 
 Tech Stack: Python (FastAPI), ViteJS (React) and Docker (DB)
 
-### Demo Screenshots
+## Demo Screenshots / Videos
 This is still a work in progress, more will be added.
 
 ### Latest Demo
