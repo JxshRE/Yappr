@@ -3,6 +3,7 @@ from uuid import UUID
 from datetime import datetime, timezone
 
 from fastapi import Depends
+from sqlalchemy import Column
 from sqlalchemy.sql.annotation import Annotated
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 
@@ -29,7 +30,7 @@ class Message(SQLModel, table=True):
     modified_at : Optional[datetime] = Field(default=None)
 
 class Channel(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True, sa_column_kwargs={"autoincrement": True})
     guid: UUID | None = Field(default=None)
     disabled: bool | None = Field(default=False, primary_key=True)
     name: str | None
@@ -37,11 +38,11 @@ class Channel(SQLModel, table=True):
     modified_at: datetime = Field(default=datetime.now(tz=timezone.utc))
 
 class UserChannel(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True, sa_column_kwargs={"autoincrement": True})
     channel_id: int | None = Field(default=None, foreign_key="channel.id")
     user_id: int | None = Field(default=None, foreign_key="user.id")
-    created_at: datetime = Field(default=datetime.now(tz=timezone.utc))
-    modified_at: datetime = Field(default=datetime.now(tz=timezone.utc))
+    created_at: datetime = Field(default=None)
+    modified_at: datetime = Field(default=None)
     disabled: bool | None = Field(default=False, primary_key=True)
 
 

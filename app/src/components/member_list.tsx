@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
-import { GetChannelMembers } from "../api/services/chat_service";
+import { GetChannelMembers, Invite } from "../api/services/chat_service";
 import { ChannelMember } from "../types/channel_member";
+import { InviteMemberModal } from "./invite_member_modal";
 
-interface props{
+interface props {
     channelId: string
 }
 
 export function ChannelMemberList({ channelId }: props) {
     const [members, setMembers] = useState<ChannelMember[]>([])
+    const [toggle, setToggle] = useState(false)
 
     function getMembers() {
         GetChannelMembers(channelId).then(x => {
@@ -15,12 +17,28 @@ export function ChannelMemberList({ channelId }: props) {
         })
     }
 
-    useEffect(()=>{
+    function toggleModal() {
+        setToggle(true);
+    }
+
+    function hideModal(){
+        setToggle(false);
+    }
+
+    function addMember(member: ChannelMember){
+        setMembers([...members, member]);
+    }
+
+    useEffect(() => {
         getMembers();
     }, [channelId])
 
-    return(
+    return (
         <div className="w-[25em] h-full bg-secondary">
+            {
+                toggle ?
+                    <InviteMemberModal hideModal={hideModal} addMember={addMember} channelId={channelId} /> : null
+            }
             <div className="w-full h-full p-2 gap-3 flex flex-col">
                 {
                     members.map((member, i) => (
@@ -34,6 +52,11 @@ export function ChannelMemberList({ channelId }: props) {
                         </div>
                     ))
                 }
+                <div className="w-full h-15 bg-primary p-2 flex items-center rounded-lg cursor-pointer" onClick={toggleModal}>
+                    <p className="text-xl w-full text-center">
+                        Invite Member
+                    </p>
+                </div>
             </div>
         </div>
     )

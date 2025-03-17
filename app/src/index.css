@@ -2,6 +2,8 @@
 
 @theme{
   --color-secondary: #192734;
+  --color-secondary-darker:rgb(23, 35, 46);
+  --color-secondary-border:rgb(94, 113, 130);
   --color-primary-lighter:rgb(34, 51, 69);
   --color-primary: #15202B;
   --color-foreground: #8899AC;

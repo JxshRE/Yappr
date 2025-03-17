@@ -1,10 +1,14 @@
 ﻿import uuid
+from argparse import ArgumentError
 from datetime import datetime, timezone
 
+from fastapi import HTTPException
 from pydantic import BaseModel
 from sqlmodel import select, Session
 
 from database.database import UserChannel, Channel, User, Message
+from database.user_repo import get_user
+
 
 class MemberReduced(BaseModel):
     username: str
@@ -50,6 +54,50 @@ def get_channel_members(user: User, session: Session, channel_id: uuid.UUID):
         members.append(MemberReduced(username=member.username, user_id=member.user_guid))
 
     return members
+
+def get_channel_by_guid(channel_guid: uuid.UUID, session: Session) -> Channel:
+    statement = select(Channel).where(Channel.guid == channel_guid)
+    results = session.exec(statement)
+
+    for channel in results:
+        return channel
+
+def is_user_in_channel(user: User, channel_guid: uuid.UUID, session: Session) -> bool:
+    statement = select(Channel, UserChannel).join(UserChannel, Channel.id == UserChannel.channel_id).where(Channel.guid == channel_guid and UserChannel.user_id == user.id)
+    results = session.exec(statement)
+
+    return results.first() is not None
+
+def db_add_member_to_channel(user: User, channel_guid: uuid.UUID, member_name: str, session: Session):
+    if not is_user_in_channel(user, channel_guid, session):
+        return
+
+    members = get_channel_members(user, session, channel_guid)
+    if next((m for m in members if m.username == member_name), None) is not None:
+        raise HTTPException(status_code=400, detail="User already exists in channel")
+
+    channel = get_channel_by_guid(channel_guid, session)
+    target_user = get_user(member_name, session)
+
+    if target_user is None:
+        raise HTTPException(status_code=400, detail="Invalid user")
+
+    u_channel = UserChannel(channel_id=channel.id, user_id=target_user.id, created_at=datetime.now(tz=timezone.utc), modified_at=datetime.now(tz=timezone.utc))
+    session.add(u_channel)
+    session.commit()
+
+    return MemberReduced(username=target_user.username, user_id=target_user.user_guid)
+
+def db_create_channel(user: User, channel_name: str, session: Session):
+    channel = Channel(name=channel_name, guid=uuid.uuid4(), created_at=datetime.now(tz=timezone.utc), modified_at=datetime.now(tz=timezone.utc))
+    session.add(channel)
+    session.commit()
+
+    user_channel = UserChannel(channel_id=channel.id, user_id=user.id, created_at=datetime.now(tz=timezone.utc), modified_at=datetime.now(tz=timezone.utc))
+    session.add(user_channel)
+    session.commit()
+
+    return ChannelReduced(name=channel.name, guid=channel.guid)
 
 def get_message_history(session: Session, channel_id: uuid.UUID, user: User, pageIndex: int, pageSize: int):
     statement = (select(Message, Channel, UserChannel, User)

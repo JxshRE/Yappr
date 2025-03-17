@@ -20,7 +20,7 @@ export function Chat({ channelId }: props) {
     const scrollToRef = useRef<HTMLDivElement | null>(null);
     const [disableAutoScroll, setDisableAutoScroll] = useState(false);
     const [ pageIndex, setPageIndex ] = useState(0);
-    const [ pageSize, setPageSize ] = useState(10);
+    const [ pageSize, setPageSize ] = useState(60);
     const [ reachedMaxHistory, setReachedMaxHistory ] = useState(false);
     const [ initialLoaded, setInitialLoaded ] = useState(false)
 
@@ -84,10 +84,10 @@ export function Chat({ channelId }: props) {
             setPageIndex(newPageIndex);
             if (!reachedMaxHistory){
                 GetChannelHistory(channelId, newPageIndex, pageSize).then(x => {
-                    if (x.data) {
-                        if (x.data.length === 0){
-                            setReachedMaxHistory(true);
-                        }
+                    if (!x.data || x.data.length == 0){
+                        setReachedMaxHistory(true);
+                    }
+                    else if (x.data) {
                         
                         setDisableAutoScroll(true)
                         setMessageHistory((prev)=>[...x.data, ...prev]);
@@ -133,15 +133,22 @@ export function Chat({ channelId }: props) {
         return dayjs(date).format('DD/MM/YYYY HH:mm');
     }
 
+    function isSameAuthor(i: number, x: Message){
+        return (messageHistory[i-1] == null || (messageHistory[i-1] != null && messageHistory[i-1].sender_guid !== x.sender_guid))
+    }
+
     return (
         <div className="w-full h-full bg-secondary p-3 flex flex-col">
             <p className="mb-2">Chat ID: {channelId}</p>
-            <div ref={chatWindowRef} onScroll={handleAutoScroll} className="w-full h-full flex flex-col gap-3 flex-start overflow-y-scroll">
+            <div ref={chatWindowRef} onScroll={handleAutoScroll} className="w-full h-full flex flex-col flex-start overflow-y-scroll">
                 {
                     messageHistory.map((x, i) => (
-                        <div key={i} className="pl-3 w-full p-2 bg-primary flex flex-col rounded-lg h-max">
-                            <span className="text-sm text-foreground font-normal">{formatDate(x.created_at)}</span>
-                            <p className="font-bold text-lg w-full pb-2">{x.sender_name}</p>
+                        <div key={i} className={"pl-3 w-full p-2 border-l-[3px] border-primary bg-secondary-darker flex flex-col h-max " + (isSameAuthor(i,x) ? "mt-3" : "mt-1")}>
+                            { isSameAuthor(i,x) ?
+                            <div className="w-full">
+                                <span className="text-sm text-foreground font-normal">{formatDate(x.created_at)}</span>
+                                <p className="font-bold text-lg w-full pb-2">{x.sender_name}</p>
+                            </div> : null } 
                             <p className="text-foreground">{x.content}</p>
                         </div>  
                     ))
