@@ -15,3 +15,11 @@ export function GetChannelHistory(channel: string, pageIndex: number, pageSize: 
 export function GetChannelMembers(channel: string){
     return apiClient.get<ChannelMember[]>(`/chat/channel/${channel}/members`)
 }
+
+export function CreateChannel(channel_name: string){
+    return apiClient.post<Channel>("/chat/channels/create", {channel_name})
+}
+
+export function Invite(channel_guid: string, member_name: string){
+    return apiClient.post<ChannelMember>("/chat/channels/invite", {channel_guid, member_name})
+}
