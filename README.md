@@ -17,11 +17,6 @@ https://github.com/user-attachments/assets/ff0f97d4-429d-405c-a31a-eb3bacb39c6a
 ### Message Paging
 https://github.com/user-attachments/assets/e229f253-d94a-4403-baee-a5025a007772
 
-
-#### With channel member list
-![yappr_new_screenshot](https://github.com/user-attachments/assets/b9989511-dd35-40d0-ac3e-322376ee7121)
-
-
 ### To-Do List
 - ~~Refactor of code~~
 - ~~Ability to create channels~~
