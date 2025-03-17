@@ -5,6 +5,8 @@ A simple chat application built with python & react so you can finally talk to y
 
 This is just a portfolio coding project that's still in progress.
 
+Tech Stack: Python (FastAPI), ViteJS (React) and Docker (DB)
+
 ### Demo Screenshots
 This is still a work in progress, more will be added.
 
